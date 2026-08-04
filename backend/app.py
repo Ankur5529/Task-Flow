@@ -69,6 +69,10 @@ def create_app():
     # Import socket events to register them
     import socket_events
 
+    @app.route('/')
+    def index():
+        return jsonify({"msg": "Backend is running!"}), 200
+
     @app.route('/health')
     def health_check():
         return jsonify({"status": "healthy"}), 200
