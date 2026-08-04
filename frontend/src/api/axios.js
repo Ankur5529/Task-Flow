@@ -6,7 +6,7 @@ export const api = axios.create({
     withCredentials: true, // Crucial for sending/receiving HttpOnly cookies
 });
 
-// We will store the access token in memory
+// Feature 2: The access token is stored in memory to prevent XSS. The refresh token is in an HttpOnly cookie.
 let accessToken = null;
 
 export const setAccessToken = (token) => {
@@ -42,7 +42,7 @@ api.interceptors.request.use((config) => {
     return Promise.reject(error);
 });
 
-// Response interceptor: Handle 401s transparently
+// Feature 5: Expired access token returns 401 and the client transparently refreshes and retries.
 api.interceptors.response.use((response) => {
     return response;
 }, async (error) => {

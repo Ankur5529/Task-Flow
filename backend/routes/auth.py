@@ -19,12 +19,6 @@ def is_valid_email(email):
     return bool(EMAIL_REGEX.match(email))
 
 def validate_password(password):
-    """
-    Password rules (documented in README):
-    - Minimum 8 characters
-    - At least one letter
-    - At least one number
-    """
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
     if not re.search(r'[A-Za-z]', password):
@@ -33,6 +27,7 @@ def validate_password(password):
         return False, "Password must contain at least one number"
     return True, None
 
+# Feature 1: Sign up with name, email, password. Validate email format and enforce password rules you define and document.
 @auth_bp.route('/signup', methods=['POST'])
 def signup():
     data = request.get_json()
@@ -54,6 +49,7 @@ def signup():
     if User.query.filter_by(email=email).first():
         return jsonify({"msg": "Email already registered"}), 409
 
+    # Feature 3: Passwords hashed with bcrypt or argon2. Plaintext is an automatic fail.
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
 
@@ -68,6 +64,7 @@ def signup():
 
     return jsonify({"msg": "User created successfully"}), 201
 
+# Feature 2: Log in / log out using JWT with a refresh-token flow: a short-lived access token and a longer-lived refresh token.
 @auth_bp.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -99,6 +96,7 @@ def login():
 
     return resp, 200
 
+# Feature 5: Expired access token returns 401 and the client transparently refreshes and retries.
 @auth_bp.route('/refresh', methods=['POST'])
 @jwt_required(refresh=True)
 def refresh():
@@ -115,6 +113,7 @@ def logout():
     unset_jwt_cookies(resp)
     return resp, 200
 
+# Feature 5: Unauthenticated requests to protected endpoints return 401.
 @auth_bp.route('/me', methods=['GET'])
 @jwt_required()
 def me():

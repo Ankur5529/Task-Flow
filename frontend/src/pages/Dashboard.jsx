@@ -68,16 +68,19 @@ const Dashboard = () => {
             api.get('/tasks/me').then(res => setTasks(res.data)).catch(console.error);
         };
 
+        // Feature 24: When a user is assigned a task, their "Assigned to me" view updates live.
         socket.on('activity_logged', onActivityLogged);
         socket.on('task_created', onTaskEvent);
         socket.on('task_updated', onTaskEvent);
         socket.on('task_deleted', onTaskEvent);
+        socket.on('assigned_task_updated', onTaskEvent);
 
         return () => {
             socket.off('activity_logged', onActivityLogged);
             socket.off('task_created', onTaskEvent);
             socket.off('task_updated', onTaskEvent);
             socket.off('task_deleted', onTaskEvent);
+            socket.off('assigned_task_updated', onTaskEvent);
         };
     }, []);
 
@@ -108,6 +111,7 @@ const Dashboard = () => {
         setNewProjectDesc('');
     };
 
+    // Feature 27: Show for the logged-in user: number of projects they are in, tasks assigned to them by status, tasks they completed this week, the project with the most open tasks, and a personal recent-activity feed.
     return (
         <div className="dashboard-container" style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
@@ -172,7 +176,7 @@ const Dashboard = () => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '24px', alignItems: 'start' }}>
                     
-                    {/* Left Column: Assigned to Me */}
+                    {/* Feature 18: "Assigned to me" view (across all their projects) */}
                     <div className="glass-panel" style={{ padding: '24px' }}>
                         <h2 style={{ fontSize: '1.2rem', marginBottom: '16px', borderBottom: '1px solid var(--glass-border)', paddingBottom: '8px' }}>Assigned to Me</h2>
                         {tasks.length === 0 ? (

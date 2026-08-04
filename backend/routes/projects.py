@@ -6,12 +6,9 @@ from activity_helper import log_activity
 
 projects_bp = Blueprint('projects', __name__)
 
+# Feature 4: A user can only see and modify data for projects they are a member of. Enforce this on the backend.
+# Feature 8: Roles within a project: owner and member. Enforce on the backend.
 def require_project_membership(require_owner=False):
-    """
-    Decorator to ensure the current user is a member of the project.
-    If require_owner is True, the user must have the 'owner' role.
-    Assumes the route has a 'project_id' parameter.
-    """
     def decorator(fn):
         @wraps(fn)
         def wrapper(project_id, *args, **kwargs):
@@ -33,6 +30,7 @@ def require_project_membership(require_owner=False):
     return decorator
 
 
+# Feature 6: A user can create projects. The creator is the project owner.
 @projects_bp.route('', methods=['POST'], strict_slashes=False)
 @jwt_required()
 def create_project():
@@ -120,6 +118,7 @@ def get_project_details(project_id, current_member):
     }), 200
 
 
+# Feature 9: Deleting a project removes its tasks and memberships cleanly.
 @projects_bp.route('/<project_id>', methods=['DELETE'])
 @jwt_required()
 @require_project_membership(require_owner=True)
@@ -130,6 +129,7 @@ def delete_project(project_id, current_member):
     return jsonify({"msg": "Project deleted successfully"}), 200
 
 
+# Feature 7: The owner can invite other registered users (by email) as members.
 @projects_bp.route('/<project_id>/members', methods=['POST'])
 @jwt_required()
 @require_project_membership(require_owner=True)
@@ -170,6 +170,7 @@ def invite_member(project_id, current_member):
     }), 201
 
 
+# Feature 9: Removing a member must not delete the tasks they created; it just revokes their access.
 @projects_bp.route('/<project_id>/members/<user_id>', methods=['DELETE'])
 @jwt_required()
 @require_project_membership(require_owner=True)

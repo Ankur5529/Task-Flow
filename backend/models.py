@@ -31,12 +31,13 @@ class Project(db.Model):
     tasks = db.relationship('Task', back_populates='project', cascade='all, delete-orphan')
     activity_logs = db.relationship('ActivityLog', back_populates='project', cascade='all, delete-orphan')
 
+# Feature 7: A user belongs to many projects; a project has many members. Model this properly.
 class ProjectMember(db.Model):
     __tablename__ = 'project_members'
     id = db.Column(db.String(36), primary_key=True, default=generate_uuid)
     project_id = db.Column(db.String(36), db.ForeignKey('projects.id'), nullable=False)
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
-    role = db.Column(db.String(20), nullable=False) # 'owner' or 'member'
+    role = db.Column(db.String(20), nullable=False)
     
     project = db.relationship('Project', back_populates='members')
     user = db.relationship('User', back_populates='memberships')

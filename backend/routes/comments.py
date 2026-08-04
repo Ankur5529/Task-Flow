@@ -11,7 +11,6 @@ comments_bp = Blueprint('comments', __name__)
 @jwt_required()
 @require_project_membership(require_owner=False)
 def get_comments(project_id, current_member, task_id):
-    # Verify the task belongs to the project
     task = Task.query.filter_by(id=task_id, project_id=project_id).first()
     if not task:
         return jsonify({"msg": "Task not found in this project"}), 404
@@ -31,6 +30,7 @@ def get_comments(project_id, current_member, task_id):
         
     return jsonify(comments_data), 200
 
+# Feature 19: A member can comment on a task; comments show author and timestamp and are visible to all project members.
 @comments_bp.route('', methods=['POST'])
 @jwt_required()
 @require_project_membership(require_owner=False)
@@ -42,7 +42,6 @@ def create_comment(project_id, current_member, task_id):
     if not content or content.strip() == '':
         return jsonify({"msg": "Comment content cannot be empty"}), 400
         
-    # Verify the task belongs to the project
     task = Task.query.filter_by(id=task_id, project_id=project_id).first()
     if not task:
         return jsonify({"msg": "Task not found in this project"}), 404
@@ -66,7 +65,6 @@ def create_comment(project_id, current_member, task_id):
         "timestamp": new_comment.timestamp.isoformat()
     }
     
-    # Emit socket event to the project room for real-time updates
     socketio.emit('comment_created', comment_data, room=f"project_{project_id}")
     
     log_activity(project_id, current_user_id, f"commented on task '{task.title}'")

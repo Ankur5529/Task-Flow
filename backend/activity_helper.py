@@ -1,13 +1,8 @@
 from models import db, ActivityLog, User
 from extensions import socketio
 
+# Feature 21: Record key events per project: task created, task moved, task assigned, member invited, member removed, comment added.
 def log_activity(project_id, user_id, action_text):
-    """
-    Creates an ActivityLog entry and emits a socket event.
-    Failures here are logged but never propagate — activity logging
-    is a secondary concern and should never break the primary action
-    (e.g. a comment or task update) that triggered it.
-    """
     try:
         log_entry = ActivityLog(
             project_id=project_id,

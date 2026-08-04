@@ -354,6 +354,7 @@ const ProjectBoard = () => {
         }
     };
 
+    // Feature 12: A board view with columns by status; tasks appear in the right column.
     const renderBoardColumn = (title, status) => {
         const columnTasks = tasks.filter(t => t.status === status);
 

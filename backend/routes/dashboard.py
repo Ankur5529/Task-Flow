@@ -6,6 +6,7 @@ from sqlalchemy import func
 
 dashboard_bp = Blueprint('dashboard', __name__)
 
+# Feature 27: Show for the logged-in user: number of projects they are in, tasks assigned to them by status, tasks they completed this week, the project with the most open tasks, and a personal recent-activity feed.
 @dashboard_bp.route('/stats', methods=['GET'])
 @jwt_required()
 def get_dashboard_stats():

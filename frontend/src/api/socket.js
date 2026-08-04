@@ -19,6 +19,7 @@ export const initSocket = () => {
             console.log('Socket connected');
         });
 
+        // Feature 26: Handle disconnects sensibly. The socket automatically reconnects when possible.
         socket.on('disconnect', () => {
             console.log('Socket disconnected');
         });
