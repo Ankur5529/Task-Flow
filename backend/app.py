@@ -35,7 +35,10 @@ def create_app():
     # Configure JWT
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'super-secret-default-key')
     app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']
-    app.config['JWT_COOKIE_SECURE'] = False  # Set to True in production (HTTPS)
+    # If in production (Render), these must be True & 'None' for cross-domain cookies to work!
+    is_prod = os.getenv('FLASK_ENV') == 'production' or 'onrender.com' in FRONTEND_ORIGIN
+    app.config['JWT_COOKIE_SECURE'] = is_prod
+    app.config['JWT_COOKIE_SAMESITE'] = 'None' if is_prod else 'Lax'
     app.config['JWT_REFRESH_COOKIE_PATH'] = '/auth/refresh'
     # NOTE: CSRF protection on the refresh cookie is disabled for dev simplicity.
     # Documented as a known trade-off in README — should be enabled before real production use.
