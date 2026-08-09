@@ -9,7 +9,7 @@ import ProjectBoard from './pages/ProjectBoard';
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
   
-  if (loading) return <div style={{color: 'white', padding: '20px'}}>Loading...</div>;
+  if (loading) return <div style={{color: 'var(--text-secondary)', padding: '40px', textAlign: 'center', fontSize: '0.95rem'}}>Loading…</div>;
   
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -41,6 +41,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </AuthProvider>

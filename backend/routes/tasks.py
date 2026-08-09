@@ -183,6 +183,7 @@ def update_task(project_id, current_member, task_id):
 
     original_title = task.title
     original_assignee_id = task.assignee_id
+    original_status = task.status
 
     new_status = data.get('status', task.status)
 
@@ -240,11 +241,11 @@ def update_task(project_id, current_member, task_id):
 
     if 'title' in data and data['title'].strip() != original_title:
         log_activity(project_id, current_member.user_id, f"renamed task '{original_title}' to '{task.title}'")
-    elif 'status' in data:
+    elif 'status' in data and new_status != original_status:
         log_activity(project_id, current_member.user_id, f"moved task '{task.title}' to '{new_status}'")
     elif 'assignee_id' in data:
         if assignee_id:
-            assignee_user = User.query.get(assignee_id)
+            assignee_user = db.session.get(User, assignee_id)
             log_activity(project_id, current_member.user_id, f"assigned task '{task.title}' to {assignee_user.name if assignee_user else 'Unknown'}")
         else:
             log_activity(project_id, current_member.user_id, f"unassigned task '{task.title}'")

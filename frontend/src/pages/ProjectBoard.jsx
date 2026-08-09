@@ -259,7 +259,7 @@ const ProjectBoard = () => {
             const assigneeName = project.members.find(m => String(m.id) === String(payload.assignee_id))?.name || '';
             setSelectedTask({ ...selectedTask, ...payload, assignee_name: assigneeName });
         } catch (error) {
-            alert(error.response?.data?.msg || 'Failed to update task');
+            setActionError(error.response?.data?.msg || 'Failed to update task');
         }
     };
 
@@ -271,7 +271,7 @@ const ProjectBoard = () => {
             closeTaskDetails();
             fetchTasks();
         } catch (error) {
-            alert(error.response?.data?.msg || 'Failed to delete task');
+            setActionError(error.response?.data?.msg || 'Failed to delete task');
         }
     };
 
@@ -379,7 +379,7 @@ const ProjectBoard = () => {
                                 value={task.status}
                                 onClick={(e) => e.stopPropagation()}
                                 onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                                style={{ background: 'var(--glass-bg)', color: 'white', border: 'none', padding: '4px', borderRadius: '4px' }}
+                                style={{ background: '#F8FAFF', color: 'var(--text-primary)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer' }}
                             >
                                 <option value="To Do">To Do</option>
                                 <option value="In Progress">In Progress</option>
@@ -416,19 +416,22 @@ const ProjectBoard = () => {
                     onClick={() => navigate('/')}
                     className="btn-primary"
                     style={{
-                        background: 'var(--glass-bg)',
-                        border: '1px solid var(--glass-border)',
+                        background: 'white',
+                        border: '1.5px solid var(--card-border)',
                         width: 'auto',
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '8px',
                         padding: '8px 16px',
-                        fontSize: '1rem',
+                        fontSize: '0.9rem',
                         transition: 'all 0.2s',
-                        color: 'white'
+                        color: 'var(--accent-color)',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        fontWeight: '600',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'var(--glass-bg)'}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-color)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'white'}
                 >
                     <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>&#8592;</span> Back to Dashboard
                 </button>
@@ -439,7 +442,7 @@ const ProjectBoard = () => {
                     <p style={{ color: 'var(--text-secondary)' }}>{project.description}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button className="btn-primary" onClick={() => { setShowActivityModal(true); fetchActivities(); }} style={{ width: 'auto', backgroundColor: 'var(--glass-bg)' }}>
+                    <button className="btn-primary" onClick={() => { setShowActivityModal(true); fetchActivities(); }} style={{ width: 'auto', backgroundColor: 'var(--accent-color)' }}>
                         Activity Log
                     </button>
                     <button className="btn-primary" onClick={() => setShowMembersModal(true)} style={{ width: 'auto', backgroundColor: 'var(--accent-color)' }}>
@@ -448,7 +451,7 @@ const ProjectBoard = () => {
                     <button className="btn-primary" onClick={() => setShowCreateModal(true)} style={{ width: 'auto' }}>
                         + New Task
                     </button>
-                    <button className="btn-primary" onClick={() => setViewMode(viewMode === 'board' ? 'list' : 'board')} style={{ width: 'auto', backgroundColor: 'var(--glass-bg)' }}>
+                    <button className="btn-primary" onClick={() => setViewMode(viewMode === 'board' ? 'list' : 'board')} style={{ width: 'auto', background: 'white', color: 'var(--text-secondary)', border: '1.5px solid var(--card-border)' }}>
                         Toggle View ({viewMode === 'board' ? 'List' : 'Board'})
                     </button>
                 </div>
@@ -457,23 +460,23 @@ const ProjectBoard = () => {
             {actionError && <div className="error-banner" style={{ marginBottom: '16px' }}>{actionError}</div>}
 
             {/* Filters Bar */}
-            <div className="glass-panel" style={{ padding: '16px', display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            <div className="glass-panel" style={{ padding: '16px', display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <input
                     type="text"
                     placeholder="Search tasks..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
-                    style={{ padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}
+                    style={{ padding: '8px 12px', background: '#F8FAFF', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '8px', outline: 'none', fontSize: '0.875rem' }}
                 />
 
-                <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }} style={{ padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}>
+                <select value={priorityFilter} onChange={(e) => { setPriorityFilter(e.target.value); setPage(1); }} style={{ padding: '8px', background: '#F8FAFF', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
                     <option value="">All Priorities</option>
                     <option value="High">High</option>
                     <option value="Medium">Medium</option>
                     <option value="Low">Low</option>
                 </select>
 
-                <select value={assigneeFilter} onChange={(e) => { setAssigneeFilter(e.target.value); setPage(1); }} style={{ padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}>
+                <select value={assigneeFilter} onChange={(e) => { setAssigneeFilter(e.target.value); setPage(1); }} style={{ padding: '8px', background: '#F8FAFF', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
                     <option value="">All Assignees</option>
                     <option value="unassigned">Unassigned</option>
                     {project.members.map(m => (
@@ -481,13 +484,13 @@ const ProjectBoard = () => {
                     ))}
                 </select>
 
-                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}>
+                <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} style={{ padding: '8px', background: '#F8FAFF', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
                     <option value="created_at">Sort by Created</option>
                     <option value="priority">Sort by Priority</option>
                     <option value="due_date">Sort by Due Date</option>
                 </select>
 
-                <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} style={{ padding: '8px', background: 'var(--bg-color)', border: '1px solid var(--glass-border)', color: 'white', borderRadius: '4px' }}>
+                <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} style={{ padding: '8px', background: '#F8FAFF', border: '1.5px solid var(--card-border)', color: 'var(--text-primary)', borderRadius: '8px', outline: 'none', cursor: 'pointer' }}>
                     <option value="desc">Descending</option>
                     <option value="asc">Ascending</option>
                 </select>
@@ -529,7 +532,7 @@ const ProjectBoard = () => {
                                         <select
                                             value={task.status}
                                             onChange={(e) => handleStatusChange(task.id, e.target.value)}
-                                            style={{ background: 'var(--glass-bg)', color: 'white', border: 'none', padding: '4px', borderRadius: '4px' }}
+                                            style={{ background: '#F8FAFF', color: 'var(--text-primary)', border: '1px solid var(--card-border)', padding: '4px 8px', borderRadius: '6px', fontSize: '0.8rem', cursor: 'pointer' }}
                                         >
                                             <option value="To Do">To Do</option>
                                             <option value="In Progress">In Progress</option>
@@ -650,19 +653,22 @@ const ProjectBoard = () => {
                                     onClick={closeTaskDetails}
                                     className="btn-primary"
                                     style={{
-                                        background: 'var(--glass-bg)',
-                                        border: '1px solid var(--glass-border)',
+                                        background: 'white',
+                                        border: '1.5px solid var(--card-border)',
                                         width: 'auto',
                                         display: 'inline-flex',
                                         alignItems: 'center',
                                         gap: '8px',
                                         padding: '6px 12px',
-                                        fontSize: '0.9rem',
+                                        fontSize: '0.875rem',
                                         transition: 'all 0.2s',
-                                        color: 'white'
+                                        color: 'var(--accent-color)',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontWeight: '600',
                                     }}
-                                    onMouseEnter={e => e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'}
-                                    onMouseLeave={e => e.currentTarget.style.background = 'var(--glass-bg)'}
+                                    onMouseEnter={e => e.currentTarget.style.background = '#F8FAFF'}
+                                    onMouseLeave={e => e.currentTarget.style.background = 'white'}
                                 >
                                     <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>&#8592;</span> Back to {project?.name || 'Board'}
                                 </button>
@@ -673,7 +679,7 @@ const ProjectBoard = () => {
                                         type="text" 
                                         value={editTaskData.title} 
                                         onChange={(e) => setEditTaskData({...editTaskData, title: e.target.value})} 
-                                        style={{ fontSize: '1.5rem', fontWeight: 'bold', width: '100%', padding: '8px', background: 'var(--bg-color)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}
+                                        style={{ fontSize: '1.5rem', fontWeight: 'bold', width: '100%', padding: '8px', background: '#F8FAFF', color: 'var(--text-primary)', border: '1.5px solid var(--card-border)', borderRadius: '8px' }}
                                     />
                                 ) : (
                                     <h2>{selectedTask.title}</h2>
@@ -682,15 +688,15 @@ const ProjectBoard = () => {
                                     {isEditingTask ? (
                                         <>
                                             <button onClick={handleUpdateTaskDetails} className="btn-primary" style={{ padding: '4px 12px', fontSize: '0.8rem', width: 'auto' }}>Save</button>
-                                            <button onClick={() => setIsEditingTask(false)} style={{ background: 'var(--bg-color)', color: 'white', border: '1px solid var(--glass-border)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Cancel</button>
+                                            <button onClick={() => setIsEditingTask(false)} style={{ background: '#F8FAFF', color: 'var(--text-primary)', border: '1px solid var(--card-border)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Cancel</button>
                                         </>
                                     ) : (
                                         <>
-                                            <button onClick={() => setIsEditingTask(true)} style={{ background: 'var(--glass-bg)', color: 'white', border: '1px solid var(--glass-border)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Edit</button>
+                                            <button onClick={() => setIsEditingTask(true)} style={{ background: 'var(--glass-bg)', color: 'var(--text-primary)', border: '1px solid var(--glass-border)', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Edit</button>
                                             <button onClick={handleDeleteTask} style={{ background: 'var(--error-color)', color: 'white', border: 'none', padding: '4px 12px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>Delete</button>
                                         </>
                                     )}
-                                    <button onClick={closeTaskDetails} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.5rem', marginLeft: '8px' }}>&times;</button>
+                                    <button onClick={closeTaskDetails} style={{ background: 'none', border: 'none', color: 'var(--text-primary)', cursor: 'pointer', fontSize: '1.5rem', marginLeft: '8px' }}>&times;</button>
                                 </div>
                             </div>
                             
@@ -700,12 +706,12 @@ const ProjectBoard = () => {
                                         value={editTaskData.description} 
                                         onChange={(e) => setEditTaskData({...editTaskData, description: e.target.value})} 
                                         placeholder="Task description..."
-                                        style={{ width: '100%', padding: '8px', background: 'var(--bg-color)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px', minHeight: '80px' }}
+                                        style={{ width: '100%', padding: '8px', background: '#F8FAFF', color: 'var(--text-primary)', border: '1.5px solid var(--card-border)', borderRadius: '8px', minHeight: '80px', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem' }}
                                     />
                                     <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                                         <div>
                                             <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Priority</label>
-                                            <select value={editTaskData.priority} onChange={e => setEditTaskData({...editTaskData, priority: e.target.value})} style={{ padding: '6px', background: 'var(--bg-color)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}>
+                                            <select value={editTaskData.priority} onChange={e => setEditTaskData({...editTaskData, priority: e.target.value})} style={{ padding: '6px', background: '#F8FAFF', color: 'var(--text-primary)', border: '1.5px solid var(--card-border)', borderRadius: '6px', outline: 'none', cursor: 'pointer' }}>
                                                 <option value="Low">Low</option>
                                                 <option value="Medium">Medium</option>
                                                 <option value="High">High</option>
@@ -737,7 +743,7 @@ const ProjectBoard = () => {
                             )}
                         </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#F8FAFF' }}>
                             <h3 style={{ marginBottom: '16px' }}>Comments</h3>
                             {commentsLoading ? (
                                 <div>Loading comments...</div>
@@ -773,7 +779,7 @@ const ProjectBoard = () => {
                                     placeholder="Write a comment..."
                                     value={newComment}
                                     onChange={(e) => setNewComment(e.target.value)}
-                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                                    style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1.5px solid var(--card-border)', background: '#F8FAFF', color: 'var(--text-primary)', outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit' }}
                                     disabled={postingComment}
                                 />
                                 <button type="submit" className="btn-primary" style={{ width: 'auto' }} disabled={postingComment || !newComment.trim()}>
@@ -795,7 +801,7 @@ const ProjectBoard = () => {
                         <div style={{ padding: '24px', borderBottom: '1px solid var(--glass-border)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <h2>Manage Members</h2>
-                                <button onClick={() => setShowMembersModal(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.5rem' }}>&times;</button>
+                                <button onClick={() => setShowMembersModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.5rem' }}>&times;</button>
                             </div>
                         </div>
 
@@ -828,12 +834,12 @@ const ProjectBoard = () => {
                                             required
                                             value={inviteEmail}
                                             onChange={(e) => setInviteEmail(e.target.value)}
-                                            style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                                            style={{ padding: '12px', borderRadius: '8px', border: '1.5px solid var(--card-border)', background: '#F8FAFF', color: 'var(--text-primary)', outline: 'none', fontSize: '0.9rem', fontFamily: 'inherit' }}
                                         />
                                         <select
                                             value={inviteRole}
                                             onChange={(e) => setInviteRole(e.target.value)}
-                                            style={{ padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                                            style={{ padding: '12px', borderRadius: '8px', border: '1.5px solid var(--card-border)', background: '#F8FAFF', color: 'var(--text-primary)', outline: 'none', cursor: 'pointer', fontSize: '0.9rem' }}
                                         >
                                             <option value="member">Member</option>
                                             <option value="owner">Owner</option>
@@ -859,11 +865,11 @@ const ProjectBoard = () => {
                         <div style={{ padding: '24px', borderBottom: '1px solid var(--glass-border)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                 <h2>Activity Log</h2>
-                                <button onClick={() => setShowActivityModal(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', fontSize: '1.5rem' }}>&times;</button>
+                                <button onClick={() => setShowActivityModal(false)} style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', cursor: 'pointer', fontSize: '1.5rem' }}>&times;</button>
                             </div>
                         </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#F8FAFF' }}>
                             {activitiesLoading ? (
                                 <div>Loading activities...</div>
                             ) : activitiesError ? (
@@ -873,7 +879,7 @@ const ProjectBoard = () => {
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                                     {activities.map(act => (
-                                        <div key={act.id} style={{ background: 'var(--glass-bg)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem' }}>
+                                        <div key={act.id} style={{ background: 'white', border: '1.5px solid var(--card-border)', padding: '12px', borderRadius: '8px', fontSize: '0.9rem' }}>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                                                 <strong>{act.actor_name}</strong>
                                                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>{new Date(act.timestamp).toLocaleString()}</span>

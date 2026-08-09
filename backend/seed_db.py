@@ -19,9 +19,9 @@ def seed_db():
         salt = bcrypt.gensalt()
         pw_hash = bcrypt.hashpw(b"password", salt).decode('utf-8')
         users = [
-            User(name="Alice Owner", email="alice@example.com", password_hash=pw_hash),
-            User(name="Bob Member", email="bob@example.com", password_hash=pw_hash),
-            User(name="Charlie Member", email="charlie@example.com", password_hash=pw_hash),
+            User(name="Alice Owner", email="alice@example.com", password_hash=pw_hash),  # type: ignore
+            User(name="Bob Member", email="bob@example.com", password_hash=pw_hash),  # type: ignore
+            User(name="Charlie Member", email="charlie@example.com", password_hash=pw_hash),  # type: ignore
         ]
         db.session.add_all(users)
         db.session.commit()

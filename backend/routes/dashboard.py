@@ -44,7 +44,7 @@ def get_dashboard_stats():
         ).group_by(Task.project_id).order_by(func.count(Task.id).desc()).first()
 
         if open_tasks_by_project:
-            proj = Project.query.get(open_tasks_by_project.project_id)
+            proj = db.session.get(Project, open_tasks_by_project.project_id)
             if proj:
                 busiest_project = {
                     "id": proj.id,

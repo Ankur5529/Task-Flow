@@ -19,13 +19,14 @@ from models import db
 load_dotenv()
 
 FRONTEND_ORIGIN = os.getenv('FRONTEND_ORIGIN', 'http://localhost:5173')
+FRONTEND_ORIGINS_LIST = [origin.strip() for origin in FRONTEND_ORIGIN.split(',')]
 
 def create_app():
     app = Flask(__name__)
 
     # Configure CORS — must be a specific origin, not "*", because
     # supports_credentials=True requires an explicit origin per CORS spec
-    CORS(app, supports_credentials=True, resources={r"/*": {"origins": FRONTEND_ORIGIN}})
+    CORS(app, supports_credentials=True, resources={r"/*": {"origins": FRONTEND_ORIGINS_LIST}})
 
     # Configure Database
     db_url = os.getenv('DATABASE_URL', 'sqlite:///app.db')
@@ -80,7 +81,7 @@ def create_app():
     return app
 
 app = create_app()
-socketio.init_app(app, cors_allowed_origins=FRONTEND_ORIGIN)
+socketio.init_app(app, cors_allowed_origins=FRONTEND_ORIGINS_LIST)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True)
+    socketio.run(app, debug=True, host='0.0.0.0', port=5001, allow_unsafe_werkzeug=True)

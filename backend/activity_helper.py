@@ -1,4 +1,4 @@
-from models import db, ActivityLog, User
+from models import db, ActivityLog, User, Project
 from extensions import socketio
 
 # Feature 21: Record key events per project: task created, task moved, task assigned, member invited, member removed, comment added.
@@ -12,11 +12,13 @@ def log_activity(project_id, user_id, action_text):
         db.session.add(log_entry)
         db.session.commit()
 
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
+        project = db.session.get(Project, project_id)
 
         activity_data = {
             "id": log_entry.id,
             "project_id": log_entry.project_id,
+            "project_name": project.name if project else "Unknown",
             "user_id": log_entry.user_id,
             "actor_name": user.name if user else "Unknown",
             "action": log_entry.action,

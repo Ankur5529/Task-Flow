@@ -136,9 +136,13 @@ def delete_project(project_id, current_member):
 def invite_member(project_id, current_member):
     data = request.get_json()
     email = data.get('email')
+    role = data.get('role', 'member')
 
     if not email:
         return jsonify({"msg": "Email is required to invite a member"}), 400
+
+    if role not in ('owner', 'member'):
+        return jsonify({"msg": "Role must be 'owner' or 'member'"}), 400
 
     user_to_invite = User.query.filter_by(email=email.strip().lower()).first()
 
@@ -152,7 +156,7 @@ def invite_member(project_id, current_member):
     new_member = ProjectMember(
         project_id=project_id,
         user_id=user_to_invite.id,
-        role='member'
+        role=role
     )
     db.session.add(new_member)
     db.session.commit()
@@ -165,7 +169,7 @@ def invite_member(project_id, current_member):
             "id": user_to_invite.id,
             "name": user_to_invite.name,
             "email": user_to_invite.email,
-            "role": "member"
+            "role": role
         }
     }), 201
 
