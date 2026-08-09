@@ -19,7 +19,8 @@ from models import db
 load_dotenv()
 
 FRONTEND_ORIGIN = os.getenv('FRONTEND_ORIGIN', 'http://localhost:5173')
-FRONTEND_ORIGINS_LIST = [origin.strip() for origin in FRONTEND_ORIGIN.split(',')]
+# Strip trailing slashes to prevent CORS mismatches
+FRONTEND_ORIGINS_LIST = [origin.strip().rstrip('/') for origin in FRONTEND_ORIGIN.split(',')]
 
 def create_app():
     app = Flask(__name__)
