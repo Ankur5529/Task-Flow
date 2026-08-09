@@ -48,6 +48,10 @@ def create_app():
 
     # Initialize extensions
     db.init_app(app)
+    
+    # Auto-create tables for Render free tier
+    with app.app_context():
+        db.create_all()
     jwt = JWTManager(app)
     migrate = Migrate(app, db)
     
