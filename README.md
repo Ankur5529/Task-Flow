@@ -29,7 +29,7 @@ Key features:
 
 ### Prerequisites
 - Python 3.10+
-- Node.js 18+
+- Node.js 22.12+
 - PostgreSQL 14+ (running locally or accessible via connection string)
 
 ### Step 1: Clone the Repository
@@ -77,6 +77,21 @@ npm install
 npm run dev
 ```
 The frontend is available at `http://localhost:5173`.
+
+## Deploying to Render and Vercel
+
+### Render (backend)
+1. Connect this GitHub repository to Render and create a Blueprint from `render.yaml` (or create a web service manually with the repository root directory set to `backend`).
+2. Use `pip install -r requirements.txt` as the build command and `gunicorn --bind 0.0.0.0:$PORT --worker-class eventlet -w 1 app:app` as the start command.
+3. Configure `DATABASE_URL` with a PostgreSQL connection string from a persistent database. Do not rely on the default SQLite database for hosted data.
+4. After Vercel has deployed the frontend, set `FRONTEND_ORIGIN` to its exact HTTPS origin (multiple comma-separated origins are supported). The Blueprint generates `JWT_SECRET_KEY` and sets production cookie settings.
+
+### Vercel (frontend)
+1. Import the same GitHub repository into Vercel and set **Root Directory** to `frontend`.
+2. Vercel uses `npm run build` and `dist` from `frontend/vercel.json`; Node.js 22.12 or newer is required by Vite.
+3. Add the `VITE_API_URL` environment variable for Production (and Preview if needed), set to the Render API origin, such as `https://your-service.onrender.com` with no trailing slash. Redeploy after changing environment variables.
+
+The frontend and backend must both be deployed and use matching origins: `VITE_API_URL` points to Render, while Render's `FRONTEND_ORIGIN` points to Vercel. Vercel/Render dashboard environment variables and project-root settings cannot be configured from this repository; they must be completed in each hosting account.
 
 ### Test Credentials
 `seed_db.py` automatically creates the following test users:
