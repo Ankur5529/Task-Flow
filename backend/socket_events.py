@@ -4,7 +4,7 @@ from flask_jwt_extended import decode_token
 from jwt.exceptions import ExpiredSignatureError, InvalidTokenError
 
 from extensions import socketio
-from models import User, ProjectMember
+from models import db, User, ProjectMember
 
 # Feature 22: Use WebSockets (Socket.io) for live updates.
 @socketio.on('connect')
@@ -19,7 +19,7 @@ def handle_connect(auth):
         decoded_token = decode_token(token)
         user_id = decoded_token['sub']
         
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return False
             

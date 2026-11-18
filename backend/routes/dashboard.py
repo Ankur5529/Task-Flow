@@ -17,20 +17,27 @@ def get_dashboard_stats():
     project_ids = [m.project_id for m in memberships]
     project_count = len(project_ids)
 
-    # Tasks assigned to user by status
-    assigned_tasks = Task.query.filter_by(assignee_id=current_user_id).all()
+    # Tasks assigned to user by status (scoped to current project memberships)
     tasks_by_status = {"To Do": 0, "In Progress": 0, "Done": 0}
-    for t in assigned_tasks:
-        if t.status in tasks_by_status:
-            tasks_by_status[t.status] += 1
+    completed_this_week = 0
 
-    # Tasks completed this week
-    week_start = datetime.utcnow() - timedelta(days=7)
-    completed_this_week = Task.query.filter(
-        Task.assignee_id == current_user_id,
-        Task.status == 'Done',
-        Task.completed_date >= week_start
-    ).count()
+    if project_ids:
+        assigned_tasks = Task.query.filter(
+            Task.assignee_id == current_user_id,
+            Task.project_id.in_(project_ids)
+        ).all()
+        for t in assigned_tasks:
+            if t.status in tasks_by_status:
+                tasks_by_status[t.status] += 1
+
+        # Tasks completed this week
+        week_start = datetime.utcnow() - timedelta(days=7)
+        completed_this_week = Task.query.filter(
+            Task.assignee_id == current_user_id,
+            Task.project_id.in_(project_ids),
+            Task.status == 'Done',
+            Task.completed_date >= week_start
+        ).count()
 
     # Project with most open tasks (To Do + In Progress)
     busiest_project = None

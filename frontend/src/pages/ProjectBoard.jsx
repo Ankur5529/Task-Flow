@@ -69,7 +69,7 @@ const ProjectBoard = () => {
         try {
             const res = await api.get(`/projects/${projectId}`);
             setProject(res.data);
-        } catch (error) {
+        } catch {
             setProjectError('Failed to load project. Please try again.');
         }
     };
@@ -91,7 +91,7 @@ const ProjectBoard = () => {
             const res = await api.get(`/projects/${projectId}/tasks?${params.toString()}`);
             setTasks(res.data.tasks);
             setTotalPages(res.data.pages);
-        } catch (error) {
+        } catch {
             setTasksError('Failed to load tasks. Please try again.');
         } finally {
             setTasksLoading(false);
@@ -104,7 +104,7 @@ const ProjectBoard = () => {
         try {
             const res = await api.get(`/projects/${projectId}/tasks/${taskId}/comments`);
             setComments(res.data);
-        } catch (error) {
+        } catch {
             setCommentsError('Failed to load comments. Please try again.');
         } finally {
             setCommentsLoading(false);
@@ -117,7 +117,7 @@ const ProjectBoard = () => {
         try {
             const res = await api.get(`/projects/${projectId}/activity`);
             setActivities(res.data);
-        } catch (error) {
+        } catch {
             setActivitiesError('Failed to load activities');
         } finally {
             setActivitiesLoading(false);
@@ -239,6 +239,20 @@ const ProjectBoard = () => {
         return () => socket.off('comment_created', onCommentCreated);
     }, [projectId]);
 
+    // Handle Escape key to close any active modal
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                if (selectedTask) closeTaskDetails();
+                if (showCreateModal) closeCreateModal();
+                if (showMembersModal) setShowMembersModal(false);
+                if (showActivityModal) setShowActivityModal(false);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [selectedTask, showCreateModal, showMembersModal, showActivityModal]);
+
     const handleStatusChange = async (taskId, newStatus) => {
         setActionError(null);
         try {
@@ -311,11 +325,18 @@ const ProjectBoard = () => {
         setCommentPostError(null);
         setPostingComment(true);
         try {
-            await api.post(`/projects/${projectId}/tasks/${selectedTask.id}/comments`, {
+            const res = await api.post(`/projects/${projectId}/tasks/${selectedTask.id}/comments`, {
                 content: newComment
             });
             setNewComment('');
-            // The socket will receive the event and append the comment
+            if (res.data?.comment) {
+                setComments(prev => {
+                    if (!prev.find(c => c.id === res.data.comment.id)) {
+                        return [...prev, res.data.comment];
+                    }
+                    return prev;
+                });
+            }
         } catch (error) {
             setCommentPostError(error.response?.data?.msg || 'Failed to post comment');
         } finally {
@@ -351,6 +372,16 @@ const ProjectBoard = () => {
             fetchTasks(); 
         } catch (error) {
             setInviteError(error.response?.data?.msg || 'Failed to remove member');
+        }
+    };
+
+    const handleDeleteProject = async () => {
+        if (!window.confirm(`Are you sure you want to delete project "${project.name}"? This will permanently delete all its tasks, comments, and activity.`)) return;
+        try {
+            await api.delete(`/projects/${projectId}`);
+            navigate('/');
+        } catch (error) {
+            setActionError(error.response?.data?.msg || 'Failed to delete project');
         }
     };
 
@@ -408,6 +439,8 @@ const ProjectBoard = () => {
         );
     }
 
+    const isOwner = Boolean(project?.your_role === 'owner' || (user?.id && project?.owner_id === user.id));
+
     return (
         <div style={{ padding: '40px', maxWidth: '1400px', margin: '0 auto' }}>
             {/* Prominent Back to Dashboard Button */}
@@ -436,12 +469,12 @@ const ProjectBoard = () => {
                     <span style={{ fontSize: '1.2rem', lineHeight: '1' }}>&#8592;</span> Back to Dashboard
                 </button>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
                 <div>
                     <h1>{project.name}</h1>
                     <p style={{ color: 'var(--text-secondary)' }}>{project.description}</p>
                 </div>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
                     <button className="btn-primary" onClick={() => { setShowActivityModal(true); fetchActivities(); }} style={{ width: 'auto', backgroundColor: 'var(--accent-color)' }}>
                         Activity Log
                     </button>
@@ -454,6 +487,27 @@ const ProjectBoard = () => {
                     <button className="btn-primary" onClick={() => setViewMode(viewMode === 'board' ? 'list' : 'board')} style={{ width: 'auto', background: 'white', color: 'var(--text-secondary)', border: '1.5px solid var(--card-border)' }}>
                         Toggle View ({viewMode === 'board' ? 'List' : 'Board'})
                     </button>
+                    {isOwner && (
+                        <button
+                            onClick={handleDeleteProject}
+                            style={{
+                                width: 'auto',
+                                background: 'white',
+                                color: 'var(--error-color)',
+                                border: '1.5px solid var(--card-border)',
+                                padding: '8px 16px',
+                                borderRadius: '10px',
+                                cursor: 'pointer',
+                                fontWeight: '600',
+                                fontSize: '0.875rem',
+                                transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--error-color)'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--card-border)'; }}
+                        >
+                            Delete Project
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -548,10 +602,10 @@ const ProjectBoard = () => {
                     </table>
 
                     {/* Pagination Controls */}
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '24px' }}>
-                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} className="btn-primary" style={{ width: 'auto', padding: '8px 16px' }}>Prev</button>
-                        <span style={{ padding: '8px' }}>Page {page} of {totalPages}</span>
-                        <button onClick={() => setPage(p => Math.min(totalPages, p + 1))} disabled={page === totalPages} className="btn-primary" style={{ width: 'auto', padding: '8px 16px' }}>Next</button>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', marginTop: '24px' }}>
+                        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1} className="btn-primary" style={{ width: 'auto', padding: '8px 16px' }}>Prev</button>
+                        <span style={{ padding: '8px', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Page {page} of {Math.max(1, totalPages)}</span>
+                        <button onClick={() => setPage(p => Math.min(Math.max(1, totalPages), p + 1))} disabled={page >= Math.max(1, totalPages)} className="btn-primary" style={{ width: 'auto', padding: '8px 16px' }}>Next</button>
                     </div>
                 </div>
             )}
@@ -627,10 +681,10 @@ const ProjectBoard = () => {
                                 </select>
                             </div>
                             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-                                <button type="button" className="btn-primary" onClick={closeCreateModal} disabled={creatingTask} style={{ backgroundColor: 'var(--bg-color-secondary)' }}>
+                                <button type="button" onClick={closeCreateModal} disabled={creatingTask} style={{ flex: 1, padding: '12px', background: 'white', color: 'var(--text-secondary)', border: '1.5px solid var(--card-border)', borderRadius: '10px', cursor: 'pointer', fontWeight: '600', fontSize: '0.95rem' }}>
                                     Cancel
                                 </button>
-                                <button type="submit" className="btn-primary" disabled={creatingTask}>
+                                <button type="submit" className="btn-primary" disabled={creatingTask} style={{ flex: 1 }}>
                                     {creatingTask ? 'Creating...' : 'Create Task'}
                                 </button>
                             </div>
@@ -719,14 +773,14 @@ const ProjectBoard = () => {
                                         </div>
                                         <div>
                                             <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Assignee</label>
-                                            <select value={editTaskData.assignee_id} onChange={e => setEditTaskData({...editTaskData, assignee_id: e.target.value})} style={{ padding: '6px', background: 'var(--bg-color)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }}>
+                                            <select value={editTaskData.assignee_id} onChange={e => setEditTaskData({...editTaskData, assignee_id: e.target.value})} style={{ padding: '6px', background: '#F8FAFF', color: 'var(--text-primary)', border: '1.5px solid var(--card-border)', borderRadius: '6px', outline: 'none', cursor: 'pointer' }}>
                                                 <option value="">Unassigned</option>
                                                 {project.members.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                                             </select>
                                         </div>
                                         <div>
                                             <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Due Date</label>
-                                            <input type="date" value={editTaskData.due_date} onChange={e => setEditTaskData({...editTaskData, due_date: e.target.value})} style={{ padding: '6px', background: 'var(--bg-color)', color: 'white', border: '1px solid var(--glass-border)', borderRadius: '4px' }} />
+                                            <input type="date" value={editTaskData.due_date} onChange={e => setEditTaskData({...editTaskData, due_date: e.target.value})} style={{ padding: '6px', background: '#F8FAFF', color: 'var(--text-primary)', border: '1.5px solid var(--card-border)', borderRadius: '6px', outline: 'none' }} />
                                         </div>
                                     </div>
                                 </div>
@@ -805,16 +859,16 @@ const ProjectBoard = () => {
                             </div>
                         </div>
 
-                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: 'rgba(0,0,0,0.2)' }}>
+                        <div style={{ flex: 1, overflowY: 'auto', padding: '24px', background: '#F8FAFF' }}>
                             <h3 style={{ marginBottom: '16px' }}>Current Members</h3>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {project.members.map(m => (
-                                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--glass-bg)', padding: '12px', borderRadius: '8px' }}>
+                                    <div key={m.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', border: '1.5px solid var(--card-border)', padding: '12px', borderRadius: '8px' }}>
                                         <div>
                                             <strong>{m.name}</strong> <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>({m.email})</span>
                                             <div style={{ fontSize: '0.8rem', marginTop: '4px', color: m.role === 'owner' ? 'var(--accent-color)' : 'var(--success-color)' }}>{m.role}</div>
                                         </div>
-                                        {project.owner_id === user.id && m.id !== user.id && (
+                                        {isOwner && m.role !== 'owner' && m.id !== user?.id && (
                                             <button onClick={() => handleRemoveMember(m.id)} style={{ background: 'var(--error-color)', border: 'none', color: 'white', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}>
                                                 Remove
                                             </button>
@@ -823,7 +877,7 @@ const ProjectBoard = () => {
                                 ))}
                             </div>
 
-                            {project.owner_id === user.id && (
+                            {isOwner && (
                                 <div style={{ marginTop: '32px' }}>
                                     <h3 style={{ marginBottom: '16px' }}>Invite New Member</h3>
                                     {inviteError && <div className="error-banner" style={{ marginBottom: '12px' }}>{inviteError}</div>}

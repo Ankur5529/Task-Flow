@@ -35,10 +35,15 @@ def create_app():
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Configure JWT
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'super-secret-default-key')
+    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'super-secret-default-key-change-in-production-min-32-chars')
     app.config['JWT_TOKEN_LOCATION'] = ['headers', 'cookies']
-    # If in production (Render), these must be True & 'None' for cross-domain cookies to work!
-    is_prod = os.getenv('FLASK_ENV') == 'production' or 'onrender.com' in FRONTEND_ORIGIN
+    # If in production (Render/HTTPS), these must be True & 'None' for cross-domain cookies to work!
+    is_prod = (
+        os.getenv('FLASK_ENV') == 'production' or
+        os.getenv('RENDER') == 'true' or
+        'onrender.com' in FRONTEND_ORIGIN or
+        any(origin.startswith('https://') for origin in FRONTEND_ORIGINS_LIST)
+    )
     app.config['JWT_COOKIE_SECURE'] = is_prod
     app.config['JWT_COOKIE_SAMESITE'] = 'None' if is_prod else 'Lax'
     app.config['JWT_REFRESH_COOKIE_PATH'] = '/auth/refresh'

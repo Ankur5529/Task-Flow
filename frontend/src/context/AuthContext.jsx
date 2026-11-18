@@ -18,7 +18,7 @@ export const AuthProvider = ({ children }) => {
                 setUser(meRes.data);
 
                 initSocket();
-            } catch (err) {
+            } catch {
                 setUser(null);
             } finally {
                 setLoading(false);

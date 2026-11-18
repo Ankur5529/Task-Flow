@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
+from sqlalchemy.orm import joinedload
 from models import ActivityLog, ProjectMember
 from routes.projects import require_project_membership
 
@@ -9,7 +10,7 @@ activity_bp = Blueprint('activity', __name__)
 @jwt_required()
 @require_project_membership(require_owner=False)
 def get_project_activity(project_id, current_member):
-    logs = ActivityLog.query.filter_by(project_id=project_id).order_by(ActivityLog.timestamp.desc()).limit(50).all()
+    logs = ActivityLog.query.options(joinedload(ActivityLog.actor)).filter_by(project_id=project_id).order_by(ActivityLog.timestamp.desc()).limit(50).all()
     
     logs_data = []
     for log in logs:
@@ -36,7 +37,7 @@ def get_my_activity():
     if not project_ids:
         return jsonify([]), 200
         
-    logs = ActivityLog.query.filter(ActivityLog.project_id.in_(project_ids)).order_by(ActivityLog.timestamp.desc()).limit(50).all()
+    logs = ActivityLog.query.options(joinedload(ActivityLog.actor), joinedload(ActivityLog.project)).filter(ActivityLog.project_id.in_(project_ids)).order_by(ActivityLog.timestamp.desc()).limit(50).all()
     
     logs_data = []
     for log in logs:

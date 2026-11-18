@@ -34,17 +34,17 @@ def require_project_membership(require_owner=False):
 @projects_bp.route('', methods=['POST'], strict_slashes=False)
 @jwt_required()
 def create_project():
-    data = request.get_json()
+    data = request.get_json() or {}
     current_user_id = get_jwt_identity()
 
     name = data.get('name')
     description = data.get('description', '')
 
-    if not name:
+    if not name or not isinstance(name, str) or not name.strip():
         return jsonify({"msg": "Project name is required"}), 400
 
     new_project = Project(
-        name=name,
+        name=name.strip(),
         description=description,
         owner_id=current_user_id
     )
@@ -134,11 +134,11 @@ def delete_project(project_id, current_member):
 @jwt_required()
 @require_project_membership(require_owner=True)
 def invite_member(project_id, current_member):
-    data = request.get_json()
+    data = request.get_json() or {}
     email = data.get('email')
     role = data.get('role', 'member')
 
-    if not email:
+    if not email or not isinstance(email, str) or not email.strip():
         return jsonify({"msg": "Email is required to invite a member"}), 400
 
     if role not in ('owner', 'member'):

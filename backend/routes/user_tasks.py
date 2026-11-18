@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
-from models import Task
+from sqlalchemy.orm import joinedload
+from models import Task, ProjectMember
 
 user_tasks_bp = Blueprint('user_tasks', __name__)
 
@@ -10,9 +11,17 @@ def get_my_tasks():
     current_user_id = get_jwt_identity()
     
     # Requirement #18: "Assigned to Me"
-    # Query tasks where assignee_id == current_user_id
-    # Sort by due date (nulls last)
-    tasks = Task.query.filter_by(assignee_id=current_user_id).order_by(Task.due_date.asc().nulls_last()).all()
+    # Query tasks where assignee_id == current_user_id and user is a current member of the project
+    memberships = ProjectMember.query.filter_by(user_id=current_user_id).all()
+    project_ids = [m.project_id for m in memberships]
+
+    if not project_ids:
+        return jsonify([]), 200
+
+    tasks = Task.query.options(joinedload(Task.project)).filter(
+        Task.assignee_id == current_user_id,
+        Task.project_id.in_(project_ids)
+    ).order_by(Task.due_date.asc().nulls_last(), Task.created_at.desc()).all()
     
     tasks_data = []
     for t in tasks:

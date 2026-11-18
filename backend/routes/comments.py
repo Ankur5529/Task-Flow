@@ -35,11 +35,11 @@ def get_comments(project_id, current_member, task_id):
 @jwt_required()
 @require_project_membership(require_owner=False)
 def create_comment(project_id, current_member, task_id):
-    data = request.get_json()
+    data = request.get_json() or {}
     current_user_id = get_jwt_identity()
     
     content = data.get('content')
-    if not content or content.strip() == '':
+    if not content or not isinstance(content, str) or not content.strip():
         return jsonify({"msg": "Comment content cannot be empty"}), 400
         
     task = Task.query.filter_by(id=task_id, project_id=project_id).first()

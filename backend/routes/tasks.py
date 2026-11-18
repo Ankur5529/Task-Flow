@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from datetime import datetime
 from sqlalchemy import or_, desc, asc, case
+from sqlalchemy.orm import joinedload
 from models import db, Task, ProjectMember, User
 from routes.projects import require_project_membership
 from extensions import socketio
@@ -18,7 +19,7 @@ VALID_PRIORITIES = {'Low', 'Medium', 'High'}
 @jwt_required()
 @require_project_membership(require_owner=False)
 def create_task(project_id, current_member):
-    data = request.get_json()
+    data = request.get_json() or {}
     current_user_id = get_jwt_identity()
 
     title = data.get('title')
@@ -28,7 +29,7 @@ def create_task(project_id, current_member):
     due_date_str = data.get('due_date')
     assignee_id = data.get('assignee_id')
 
-    if not title or title.strip() == '':
+    if not title or not isinstance(title, str) or not title.strip():
         return jsonify({"msg": "Task title cannot be empty"}), 400
 
     if status not in VALID_STATUSES:
@@ -106,12 +107,12 @@ def list_tasks(project_id, current_member):
     sort_by = request.args.get('sort_by', 'created_at')
     sort_order = request.args.get('sort_order', 'desc')
 
-    query = Task.query.filter_by(project_id=project_id)
+    query = Task.query.options(joinedload(Task.assignee)).filter_by(project_id=project_id)
 
     # Feature 13: Filter tasks by assignee and priority at the same time, and search by title.
     if assignee_id:
         if assignee_id == 'unassigned':
-            query = query.filter(Task.assignee_id == None)
+            query = query.filter(Task.assignee_id.is_(None))
         else:
             query = query.filter(Task.assignee_id == assignee_id)
 
@@ -121,7 +122,7 @@ def list_tasks(project_id, current_member):
     if search_query:
         query = query.filter(Task.title.ilike(f'%{search_query}%'))
 
-    # Feature 14: Server-side pagination AND sorting.
+    # Feature 14: Server-side pagination AND sorting with stable secondary key.
     if sort_by == 'priority':
         priority_case = case(
             (Task.priority == 'High', 1),
@@ -130,19 +131,19 @@ def list_tasks(project_id, current_member):
             else_=4
         )
         if sort_order == 'asc':
-            query = query.order_by(priority_case.asc())
+            query = query.order_by(priority_case.asc(), Task.created_at.desc(), Task.id.desc())
         else:
-            query = query.order_by(priority_case.desc())
+            query = query.order_by(priority_case.desc(), Task.created_at.desc(), Task.id.desc())
     elif sort_by == 'due_date':
         if sort_order == 'asc':
-            query = query.order_by(Task.due_date.asc().nulls_last())
+            query = query.order_by(Task.due_date.asc().nulls_last(), Task.created_at.desc(), Task.id.desc())
         else:
-            query = query.order_by(Task.due_date.desc().nulls_last())
+            query = query.order_by(Task.due_date.desc().nulls_last(), Task.created_at.desc(), Task.id.desc())
     else:
         if sort_order == 'asc':
-            query = query.order_by(Task.created_at.asc())
+            query = query.order_by(Task.created_at.asc(), Task.id.desc())
         else:
-            query = query.order_by(Task.created_at.desc())
+            query = query.order_by(Task.created_at.desc(), Task.id.desc())
 
     paginated_tasks = query.paginate(page=page, per_page=per_page, error_out=False)
 
@@ -175,7 +176,7 @@ def list_tasks(project_id, current_member):
 @jwt_required()
 @require_project_membership(require_owner=False)
 def update_task(project_id, current_member, task_id):
-    data = request.get_json()
+    data = request.get_json() or {}
     task = Task.query.filter_by(id=task_id, project_id=project_id).first()
 
     if not task:
@@ -190,14 +191,16 @@ def update_task(project_id, current_member, task_id):
     if new_status not in VALID_STATUSES:
         return jsonify({"msg": f"Status must be one of {sorted(VALID_STATUSES)}"}), 400
 
+    effective_assignee_id = data.get('assignee_id', task.assignee_id) if 'assignee_id' in data else task.assignee_id
+
     # Feature 20: Only the task's assignee or the project owner can mark a task Done.
     if new_status == 'Done' and task.status != 'Done':
-        if current_member.role != 'owner' and task.assignee_id != current_member.user_id:
+        if current_member.role != 'owner' and effective_assignee_id != current_member.user_id:
             return jsonify({"msg": "Only the project owner or the task assignee can mark this task as Done"}), 403
 
     if 'title' in data:
         title = data['title']
-        if not title or title.strip() == '':
+        if not title or not isinstance(title, str) or not title.strip():
             return jsonify({"msg": "Task title cannot be empty"}), 400
         task.title = title.strip()
 
